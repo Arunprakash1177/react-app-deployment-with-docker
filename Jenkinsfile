@@ -2,13 +2,34 @@ pipeline {
     agent any
 
     stages {
-        stage ('changing the file permission') {
+
+        stage('Checkout Code') {
             steps {
-                sh ' chmod +x build.sh'
+                git branch: 'master',
+                    credentialsId: 'git',
+                    url: 'https://github.com/Arunprakash1177/react-app-deployment-with-docker.git'
             }
         }
 
-        stage ('executing the file') {
+        stage('Set File Permission') {
+            steps {
+                sh 'chmod +x build.sh'
+            }
+        }
+
+        stage('Docker Login') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-credentials',
+                    usernameVariable: 'USER',
+                    passwordVariable: 'PASS'
+                )]) {
+                    sh "echo $PASS | docker login -u $USER --password-stdin"
+                }
+            }
+        }
+
+        stage('Build & Deploy') {
             steps {
                 sh './build.sh'
             }
